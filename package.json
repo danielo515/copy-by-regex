@@ -10,7 +10,8 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.regexCopy"
+		"onCommand:extension.regexCopy",
+		"onCommand:extension.regexPaste"
 	],
 	"main": "./extension.js",
 	"contributes": {
@@ -40,5 +41,8 @@
 		"mocha": "^7.0.1",
 		"typescript": "^3.7.5",
 		"vscode-test": "^1.3.0"
+	},
+	"dependencies": {
+		"ramda": "^0.27.0"
 	}
 }
