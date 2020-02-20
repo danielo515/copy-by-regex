@@ -5,12 +5,14 @@ const zip = require('ramda/src/zip');
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
-function fullLineRange(line) {
-	new vscode.Range(
-		new vscode.Position(line, 0),
-		new vscode.Position(line, 99),
-
-	)
+function fullLineRange(textEditor, selection) {
+	return textEditor.document.lineAt(selection.start.line).range
+}
+const getSelectedOrFullLIneText = (textEditor, selection) => {
+	return textEditor.document.getText( selection.isEmpty 
+			? fullLineRange(textEditor, selection)
+			: new vscode.Range(selection.start, selection.end)
+			);
 }
 let latestRegex = '\\w+';
 let latestInput = '';
@@ -31,13 +33,13 @@ function activate(context) {
 		const regexStr = await vscode.window.showInputBox({ placeHolder: 'Input the regex or enter for ' + latestRegex }) || latestRegex
 		latestRegex = regexStr
 		console.log({ regexStr })
-		const text = textEditor.document.getText(new vscode.Range(selection.start, selection.end))
+		const text = getSelectedOrFullLIneText(textEditor, selection)
 		const matches = text.match(new RegExp(regexStr, 'g')) || [];
 		latestInput = matches.toString();
 		console.log({ matches })
 		vscode.window.showInformationMessage('Copied the following => ' + matches.join(' | '))
 	});
-	
+
 	const substituteMatches = (text, [match, substitution]) => text.replace(match, substitution);
 
 	vscode.commands.registerTextEditorCommand('extension.regexPaste', async function (textEditor, edit) {
@@ -45,7 +47,9 @@ function activate(context) {
 		const regexStr = await vscode.window.showInputBox({ placeHolder: 'Input the regex or enter for: ' + latestRegex }) || latestRegex
 		latestRegex = regexStr
 		const inputStr = await vscode.window.showInputBox({ placeHolder: 'Input substitute, leave empty for: ' + latestInput }) || latestInput
-		const text = textEditor.document.getText(new vscode.Range(selection.start, selection.end))
+		
+		const text = getSelectedOrFullLIneText(textEditor, selection)
+
 		const matches = text.match(new RegExp(regexStr, 'g')) || [];
 		console.log({ matches })
 		const allValues = zip(matches, inputStr.split(','))
